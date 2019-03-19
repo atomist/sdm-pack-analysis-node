@@ -22,21 +22,24 @@
   "main": "./index.js",
   "types": "./index.d.ts",
   "dependencies": {
-    "@atomist/sdm-pack-analysis": "0.1.0-master.20190308084751",
-    "@atomist/sdm-pack-build": "^1.0.3",
-    "@atomist/sdm-pack-node": "1.0.3-master.20190318175154",
     "lodash": "^4.17.11"
   },
   "peerDependencies": {
-    "@atomist/automation-client": "*",
-    "@atomist/sdm": "*",
-    "@atomist/sdm-core": "*"
+    "@atomist/automation-client": ">=1.3.0",
+    "@atomist/sdm": ">=1.3.0",
+    "@atomist/sdm-core": ">=1.3.0",
+    "@atomist/sdm-pack-analysis": ">=0.1.0",
+    "@atomist/sdm-pack-build": ">=1.0.3",
+    "@atomist/sdm-pack-node": ">=1.0.3"
   },
   "devDependencies": {
     "@atomist/automation-client": "^1.3.0",
     "@atomist/sdm": "^1.3.0",
     "@atomist/sdm-core": "^1.3.0",
+    "@atomist/sdm-pack-analysis": "0.1.0-master.20190308084751",
     "@atomist/sdm-pack-fingerprints": "2.0.0-updates.20190208003156",
+    "@atomist/sdm-pack-build": "^1.0.3",
+    "@atomist/sdm-pack-node": "1.0.3-master.20190319105712",
     "@types/mocha": "^5.2.5",
     "@types/power-assert": "^1.5.0",
     "espower-typescript": "^9.0.0",
