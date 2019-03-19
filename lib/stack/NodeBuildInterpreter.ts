@@ -50,6 +50,7 @@ import {
     nodeBuilder,
     NodeDefaultOptions,
     NodeProjectVersioner,
+    NpmAuditInspection,
     NpmDependencyFingerprint,
     npmInstallProjectListener,
 } from "@atomist/sdm-pack-node";
@@ -117,7 +118,7 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
             const eslint = nodeStack.javaScript.eslint;
             if (eslint.hasDependency && eslint.hasConfig) {
                 interpretation.autofixes.push(EslintAutofix);
-                interpretation.inspections.push(EslintInspection);
+                interpretation.inspections.push(EslintInspection, NpmAuditInspection);
             }
         }
 
@@ -134,7 +135,7 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
     }
 
     get codeInspections(): Array<CodeInspectionRegistration<any>> {
-        return [EslintInspection];
+        return [EslintInspection, NpmAuditInspection];
     }
 
     constructor(opts: Partial<NodeDeliveryOptions> = {}) {

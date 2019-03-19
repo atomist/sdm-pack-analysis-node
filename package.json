@@ -24,7 +24,7 @@
   "dependencies": {
     "@atomist/sdm-pack-analysis": "0.1.0-master.20190308084751",
     "@atomist/sdm-pack-build": "^1.0.3",
-    "@atomist/sdm-pack-node": "1.0.3-master.20190303103845",
+    "@atomist/sdm-pack-node": "1.0.3-master.20190318175154",
     "lodash": "^4.17.11"
   },
   "peerDependencies": {
