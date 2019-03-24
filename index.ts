@@ -15,3 +15,4 @@
  */
 
 export { nodeStackSupport } from "./lib/stack/nodeStackSupport";
+export { nodeScanner } from "./lib/stack/nodeScanner";
