@@ -51,9 +51,9 @@ import {
     NodeDefaultOptions,
     NodeProjectVersioner,
     NpmAuditInspection,
-    NpmDependencyFingerprint,
     npmInstallProjectListener,
 } from "@atomist/sdm-pack-node";
+import { NpmDependencyFingerprint } from "../fingerprint/dependencies";
 import { NodeStack } from "./nodeScanner";
 
 export interface NodeDeliveryOptions {
@@ -79,6 +79,7 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
 
     private readonly testGoal: Goal;
 
+    // tslint:disable-next-line:cyclomatic-complexity
     public async enrich(interpretation: Interpretation): Promise<boolean> {
         const nodeStack = interpretation.reason.analysis.elements.node as NodeStack;
         if (!nodeStack) {
