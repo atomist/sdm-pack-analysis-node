@@ -53,8 +53,8 @@ import {
     NodeProjectVersioner,
     NpmAuditInspection,
     NpmCompileProjectListener,
-    NpmInstallProjectListener,
     npmInstallProjectListener,
+    NpmInstallProjectListener,
     NpmVersionProjectListener,
 } from "@atomist/sdm-pack-node";
 import { NpmDependencyFingerprint } from "../fingerprint/dependencies";
