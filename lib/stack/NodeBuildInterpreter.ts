@@ -38,6 +38,7 @@ import {
     Interpreter,
 } from "@atomist/sdm-pack-analysis";
 import { Build } from "@atomist/sdm-pack-build";
+import { DockerBuild } from "@atomist/sdm-pack-docker";
 import {
     fingerprintRunner,
     runFingerprints,
@@ -51,7 +52,10 @@ import {
     NodeDefaultOptions,
     NodeProjectVersioner,
     NpmAuditInspection,
+    NpmCompileProjectListener,
+    NpmInstallProjectListener,
     npmInstallProjectListener,
+    NpmVersionProjectListener,
 } from "@atomist/sdm-pack-node";
 import { NpmDependencyFingerprint } from "../fingerprint/dependencies";
 import { NodeStack } from "./nodeScanner";
@@ -72,6 +76,13 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
             name: "node-fingerprint",
             action: runFingerprints(fingerprintRunner([NpmDependencyFingerprint])),
         });
+
+    private readonly dockerBuildGoal: DockerBuild = new DockerBuild()
+        .with({
+        })
+        .with(NpmVersionProjectListener)
+        .with(NpmInstallProjectListener)
+        .with(NpmCompileProjectListener);
 
     private readonly tagGoal: Tag = new Tag();
 
@@ -114,6 +125,11 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
         }
         checkGoals.plan(this.fingerprintGoal);
         interpretation.checkGoals = checkGoals;
+
+        if (nodeStack.hasDockerFile) {
+            interpretation.containerBuildGoals = goals("dockerbuild")
+                .plan(this.dockerBuildGoal);
+        }
 
         if (!!nodeStack.javaScript && !!nodeStack.javaScript.eslint) {
             const eslint = nodeStack.javaScript.eslint;
