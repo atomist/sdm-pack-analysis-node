@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { projectUtils } from "@atomist/automation-client";
 import {
     AutofixRegistration,
     CodeInspectionRegistration,
@@ -26,6 +27,7 @@ import {
     GoalsBuilder,
     GoalWithFulfillment,
     isMaterialChange,
+    LogSuppressor,
 } from "@atomist/sdm";
 import {
     Tag,
@@ -38,7 +40,10 @@ import {
     Interpreter,
 } from "@atomist/sdm-pack-analysis";
 import { Build } from "@atomist/sdm-pack-build";
-import { DockerBuild } from "@atomist/sdm-pack-docker";
+import {
+    DockerBuild,
+    DockerProgressReporter,
+} from "@atomist/sdm-pack-docker";
 import {
     fingerprintRunner,
     runFingerprints,
@@ -79,6 +84,17 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
 
     private readonly dockerBuildGoal: DockerBuild = new DockerBuild()
         .with({
+            progressReporter: DockerProgressReporter,
+            logInterpreter: LogSuppressor,
+            options: {
+                dockerfileFinder: async p => {
+                    let dockerfile: string = "Dockerfile";
+                    await projectUtils.doWithFiles(p, "**/Dockerfile", async f => {
+                        dockerfile = f.path;
+                    });
+                    return dockerfile;
+                },
+            },
         })
         .with(NpmVersionProjectListener)
         .with(NpmInstallProjectListener)
