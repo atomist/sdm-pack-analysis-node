@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { projectUtils } from "@atomist/automation-client";
 import {
     AutofixRegistration,
     CodeInspectionRegistration,
@@ -26,6 +27,7 @@ import {
     GoalsBuilder,
     GoalWithFulfillment,
     isMaterialChange,
+    LogSuppressor,
 } from "@atomist/sdm";
 import {
     Tag,
@@ -39,6 +41,10 @@ import {
 } from "@atomist/sdm-pack-analysis";
 import { Build } from "@atomist/sdm-pack-build";
 import {
+    DockerBuild,
+    DockerProgressReporter,
+} from "@atomist/sdm-pack-docker";
+import {
     fingerprintRunner,
     runFingerprints,
 } from "@atomist/sdm-pack-fingerprints";
@@ -51,7 +57,10 @@ import {
     NodeDefaultOptions,
     NodeProjectVersioner,
     NpmAuditInspection,
+    NpmCompileProjectListener,
     npmInstallProjectListener,
+    NpmInstallProjectListener,
+    NpmVersionProjectListener,
 } from "@atomist/sdm-pack-node";
 import { NpmDependencyFingerprint } from "../fingerprint/dependencies";
 import { NodeStack } from "./nodeScanner";
@@ -72,6 +81,24 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
             name: "node-fingerprint",
             action: runFingerprints(fingerprintRunner([NpmDependencyFingerprint])),
         });
+
+    private readonly dockerBuildGoal: DockerBuild = new DockerBuild()
+        .with({
+            progressReporter: DockerProgressReporter,
+            logInterpreter: LogSuppressor,
+            options: {
+                dockerfileFinder: async p => {
+                    let dockerfile: string = "Dockerfile";
+                    await projectUtils.doWithFiles(p, "**/Dockerfile", async f => {
+                        dockerfile = f.path;
+                    });
+                    return dockerfile;
+                },
+            },
+        })
+        .with(NpmVersionProjectListener)
+        .with(NpmInstallProjectListener)
+        .with(NpmCompileProjectListener);
 
     private readonly tagGoal: Tag = new Tag();
 
@@ -114,6 +141,11 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
         }
         checkGoals.plan(this.fingerprintGoal);
         interpretation.checkGoals = checkGoals;
+
+        if (nodeStack.hasDockerFile) {
+            interpretation.containerBuildGoals = goals("dockerbuild")
+                .plan(this.dockerBuildGoal);
+        }
 
         if (!!nodeStack.javaScript && !!nodeStack.javaScript.eslint) {
             const eslint = nodeStack.javaScript.eslint;

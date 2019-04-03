@@ -16,6 +16,7 @@
 
 import {
     Project,
+    projectUtils,
     RegexFileParser,
 } from "@atomist/automation-client";
 import { matchIterator } from "@atomist/automation-client/lib/tree/ast/astUtils";
@@ -61,6 +62,10 @@ export interface NodeStack extends TechnologyStack {
 
     packageJson: PackageJsonSummary;
 
+    hasDockerFile: boolean;
+
+    dockerFile: string;
+
 }
 
 /**
@@ -97,6 +102,11 @@ export const nodeScanner: TechnologyScanner<NodeStack> = async p => {
             services.mongodb = {};
         }
 
+        let dockerFile: string;
+        await projectUtils.doWithFiles(p, "**/Dockerfile", f => {
+            dockerFile = f.path;
+        });
+
         const stack: NodeStack = {
             projectName: packageJson.name,
             packageJson,
@@ -111,6 +121,8 @@ export const nodeScanner: TechnologyScanner<NodeStack> = async p => {
                     version: rawPackageJson.dependencies[name],
                 };
             }),
+            hasDockerFile: !!dockerFile,
+            dockerFile,
             javaScript: javaScriptInto,
             services,
         };
