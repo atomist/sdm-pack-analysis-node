@@ -29,7 +29,8 @@ import { PackageJson } from "@atomist/sdm-pack-node";
 import * as _ from "lodash";
 
 export interface TypeScriptInfo {
-
+    hasDependency: boolean;
+    version: string;
     tslint: {
         hasConfig: boolean;
     };
@@ -96,6 +97,14 @@ export const nodeScanner: TechnologyScanner<NodeStack> = async p => {
             },
         };
 
+        const typeScriptInfo: TypeScriptInfo = {
+            hasDependency: hasDependency(rawPackageJson, "typescript"),
+            version: getDependencyVersion(rawPackageJson, "typescript"),
+            tslint: {
+                hasConfig: await p.hasFile("tslint.json"),
+            },
+        };
+
         // Add services per our dependencies
         const services: Record<string, Service> = {};
         if (hasDependency(rawPackageJson, "mongoose", "mongodb")) {
@@ -124,6 +133,7 @@ export const nodeScanner: TechnologyScanner<NodeStack> = async p => {
             hasDockerFile: !!dockerFile,
             dockerFile,
             javaScript: javaScriptInto,
+            typeScript: typeScriptInfo,
             services,
         };
         return stack;
@@ -170,4 +180,13 @@ function hasDependency(pj: PackageJson, ...dependencies: string[]): boolean {
         }
     }
     return false;
+}
+
+/**
+ * Check if a given package json expresses a dependency
+ */
+function getDependencyVersion(pj: PackageJson, dependency: string): string {
+    const dep = _.get(pj, `dependencies.${dependency}`);
+    const devDep = _.get(pj, `devDependencies.${dependency}`);
+    return dep || devDep;
 }

@@ -30,6 +30,7 @@ import {
     LogSuppressor,
 } from "@atomist/sdm";
 import {
+    cachePut,
     Tag,
     Version,
 } from "@atomist/sdm-core";
