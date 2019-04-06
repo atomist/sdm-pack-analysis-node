@@ -33,6 +33,7 @@ export interface TypeScriptInfo {
     version: string;
     tslint: {
         hasConfig: boolean;
+        hasDependency: boolean;
     };
 }
 
@@ -102,6 +103,7 @@ export const nodeScanner: TechnologyScanner<NodeStack> = async p => {
             version: getDependencyVersion(rawPackageJson, "typescript"),
             tslint: {
                 hasConfig: await p.hasFile("tslint.json"),
+                hasDependency: hasDependency(rawPackageJson, "tslint"),
             },
         };
 

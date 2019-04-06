@@ -66,6 +66,8 @@ import {
     NpmInstallProjectListener,
     NpmVersionProjectListener,
     PackageJson,
+    TslintAutofix,
+    TslintInspection,
 } from "@atomist/sdm-pack-node";
 import * as _ from "lodash";
 import { NpmDependencyFingerprint } from "../fingerprint/dependencies";
@@ -182,11 +184,23 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
                 .plan(this.dockerBuildGoal);
         }
 
-        if (!!nodeStack.javaScript && !!nodeStack.javaScript.eslint) {
-            const eslint = nodeStack.javaScript.eslint;
-            if (eslint.hasDependency && eslint.hasConfig) {
-                interpretation.autofixes.push(EslintAutofix);
-                interpretation.inspections.push(EslintInspection, NpmAuditInspection);
+        if (!!nodeStack.javaScript) {
+            if (!!nodeStack.javaScript.eslint) {
+                const eslint = nodeStack.javaScript.eslint;
+                if (eslint.hasDependency && eslint.hasConfig) {
+                    interpretation.autofixes.push(EslintAutofix);
+                    interpretation.inspections.push(EslintInspection, NpmAuditInspection);
+                }
+            }
+        }
+
+        if (!!nodeStack.typeScript) {
+            if (!!nodeStack.typeScript.tslint) {
+                const tslint = nodeStack.typeScript.tslint;
+                if (tslint.hasConfig) {
+                    interpretation.autofixes.push(TslintAutofix);
+                    interpretation.inspections.push(TslintInspection, NpmAuditInspection);
+                }
             }
         }
 
@@ -199,11 +213,11 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
     }
 
     get autofixes(): AutofixRegistration[] {
-        return [EslintAutofix];
+        return [EslintAutofix, TslintAutofix];
     }
 
     get codeInspections(): Array<CodeInspectionRegistration<any>> {
-        return [EslintInspection, NpmAuditInspection];
+        return [EslintInspection, TslintInspection, NpmAuditInspection];
     }
 
     constructor(opts: Partial<NodeDeliveryOptions> = {}) {
