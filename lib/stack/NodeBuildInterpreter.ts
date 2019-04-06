@@ -28,9 +28,13 @@ import {
     GoalWithFulfillment,
     isMaterialChange,
     LogSuppressor,
+    PushTest,
+    pushTest,
 } from "@atomist/sdm";
 import {
     cachePut,
+    cacheRestore,
+    GoalCacheOptions,
     Tag,
     Version,
 } from "@atomist/sdm-core";
@@ -50,7 +54,6 @@ import {
     runFingerprints,
 } from "@atomist/sdm-pack-fingerprints";
 import {
-    CacheScope,
     EslintAutofix,
     EslintInspection,
     IsNode,
@@ -59,10 +62,11 @@ import {
     NodeProjectVersioner,
     NpmAuditInspection,
     NpmCompileProjectListener,
-    npmInstallProjectListener,
     NpmInstallProjectListener,
     NpmVersionProjectListener,
+    PackageJson,
 } from "@atomist/sdm-pack-node";
+import * as _ from "lodash";
 import { NpmDependencyFingerprint } from "../fingerprint/dependencies";
 import { NodeStack } from "./nodeScanner";
 
@@ -71,6 +75,33 @@ export interface NodeDeliveryOptions {
     createTestGoal: () => GoalWithFulfillment;
     configureTestGoal?: (testGoal: GoalWithFulfillment) => void;
 }
+
+const HasTypescript: PushTest = pushTest("hasTypescript", async p => {
+    const packageJsonFile = await p.project.getFile("package.json");
+    if (!packageJsonFile) {
+        return false;
+    }
+    const packageJsonStr = await packageJsonFile.getContent();
+    const pj = JSON.parse(packageJsonStr) as PackageJson;
+    const dep = _.get(pj, `dependencies.typescript`);
+    const devDep = _.get(pj, `devDependencies.typescript`);
+    return !!(dep || devDep);
+});
+
+const NodeModulesCacheOptions: GoalCacheOptions = {
+    entries: [
+        {classifier: "nodeModules", pattern: { directory: "node_modules" }},
+        ],
+    onCacheMiss: [NpmInstallProjectListener],
+};
+
+const CompiledTypescriptCacheOptions: GoalCacheOptions = {
+    entries: [
+        {classifier: "compiledTypescript", pattern: { globPattern: "{,!(node_modules)/}**/*.{js,js.map,d.ts}" }},
+    ],
+    pushTest: HasTypescript,
+    onCacheMiss: [NpmCompileProjectListener],
+};
 
 export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInterpreter, CodeInspectionRegisteringInterpreter {
 
@@ -98,8 +129,8 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
             },
         })
         .with(NpmVersionProjectListener)
-        .with(NpmInstallProjectListener)
-        .with(NpmCompileProjectListener);
+        .with(cacheRestore(NodeModulesCacheOptions))
+        .with(cacheRestore(CompiledTypescriptCacheOptions));
 
     private readonly tagGoal: Tag = new Tag();
 
@@ -197,7 +228,9 @@ function createDefaultBuildGoal(): Build {
         name: "npm-run-build",
         builder: nodeBuilder({ command: "npm", args: ["run", "build"] }),
     })
-        .withProjectListener(npmInstallProjectListener({ scope: CacheScope.Repository }));
+        .withProjectListener(NpmInstallProjectListener)
+        .withProjectListener(cachePut(CompiledTypescriptCacheOptions))
+        .withProjectListener(cachePut(NodeModulesCacheOptions));
 }
 
 function createDefaultTestGoal(): GoalWithFulfillment {
@@ -219,5 +252,6 @@ function createDefaultTestGoal(): GoalWithFulfillment {
             },
         ),
     })
-        .withProjectListener(npmInstallProjectListener({ scope: CacheScope.Repository }));
+        .withProjectListener(cacheRestore(NodeModulesCacheOptions))
+        .withProjectListener(cacheRestore(CompiledTypescriptCacheOptions));
 }
