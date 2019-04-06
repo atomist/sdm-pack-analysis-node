@@ -28,8 +28,8 @@ import {
     GoalWithFulfillment,
     isMaterialChange,
     LogSuppressor,
-    PushTest,
     pushTest,
+    PushTest,
 } from "@atomist/sdm";
 import {
     cachePut,
