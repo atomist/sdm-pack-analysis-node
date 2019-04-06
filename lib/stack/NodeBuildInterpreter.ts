@@ -33,6 +33,7 @@ import {
 } from "@atomist/sdm";
 import {
     cachePut,
+    cacheRemove,
     cacheRestore,
     GoalCacheOptions,
     Tag,
@@ -97,7 +98,7 @@ const NodeModulesCacheOptions: GoalCacheOptions = {
 
 const CompiledTypescriptCacheOptions: GoalCacheOptions = {
     entries: [
-        {classifier: "compiledTypescript", pattern: { globPattern: "{,!(node_modules)/}**/*.{js,js.map,d.ts}" }},
+        {classifier: "compiledTypescript", pattern: { globPattern: ["**/*.{js,js.map,d.ts}", "!node_modules/**/*"] }},
     ],
     pushTest: HasTypescript,
     onCacheMiss: [NpmCompileProjectListener],
@@ -130,7 +131,9 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
         })
         .with(NpmVersionProjectListener)
         .with(cacheRestore(NodeModulesCacheOptions))
-        .with(cacheRestore(CompiledTypescriptCacheOptions));
+        .with(cacheRestore(CompiledTypescriptCacheOptions))
+        .with(cacheRemove(NodeModulesCacheOptions))
+        .with(cacheRemove(CompiledTypescriptCacheOptions));
 
     private readonly tagGoal: Tag = new Tag();
 
