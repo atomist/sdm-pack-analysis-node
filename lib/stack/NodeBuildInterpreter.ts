@@ -131,7 +131,7 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
                 },
             },
         })
-        .with(NpmVersionProjectListener)
+        .withProjectListener(NpmVersionProjectListener)
         .withProjectListener(cacheRestore(NodeModulesCacheOptions))
         .withProjectListener(cacheRestore(CompiledTypescriptCacheOptions))
         .withProjectListener(cacheRemove(NodeModulesCacheOptions))
