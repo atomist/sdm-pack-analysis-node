@@ -205,6 +205,7 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
         }
 
         interpretation.materialChangePushTests.push(isMaterialChange({
+            files: ["Dockerfile"],
             extensions: ["ts", "js", "jsx", "tsx", "json", "pug", "html", "css"],
             directories: [".atomist"],
         }));
