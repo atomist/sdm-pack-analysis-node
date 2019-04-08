@@ -132,10 +132,10 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
             },
         })
         .with(NpmVersionProjectListener)
-        .with(cacheRestore(NodeModulesCacheOptions))
-        .with(cacheRestore(CompiledTypescriptCacheOptions))
-        .with(cacheRemove(NodeModulesCacheOptions))
-        .with(cacheRemove(CompiledTypescriptCacheOptions));
+        .withProjectListener(cacheRestore(NodeModulesCacheOptions))
+        .withProjectListener(cacheRestore(CompiledTypescriptCacheOptions))
+        .withProjectListener(cacheRemove(NodeModulesCacheOptions))
+        .withProjectListener(cacheRemove(CompiledTypescriptCacheOptions));
 
     private readonly tagGoal: Tag = new Tag();
 
