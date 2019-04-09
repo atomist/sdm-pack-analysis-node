@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import { projectUtils } from "@atomist/automation-client";
+import {
+    projectUtils,
+} from "@atomist/automation-client";
 import {
     AutofixRegistration,
     CodeInspectionRegistration,
@@ -28,8 +30,14 @@ import {
     GoalWithFulfillment,
     isMaterialChange,
     LogSuppressor,
+    pushTest,
+    PushTest,
 } from "@atomist/sdm";
 import {
+    cachePut,
+    cacheRemove,
+    cacheRestore,
+    GoalCacheOptions,
     Tag,
     Version,
 } from "@atomist/sdm-core";
@@ -49,7 +57,6 @@ import {
     runFingerprints,
 } from "@atomist/sdm-pack-fingerprints";
 import {
-    CacheScope,
     EslintAutofix,
     EslintInspection,
     IsNode,
@@ -58,18 +65,42 @@ import {
     NodeProjectVersioner,
     NpmAuditInspection,
     NpmCompileProjectListener,
-    npmInstallProjectListener,
     NpmInstallProjectListener,
     NpmVersionProjectListener,
+    TslintAutofix,
+    TslintInspection,
 } from "@atomist/sdm-pack-node";
 import { NpmDependencyFingerprint } from "../fingerprint/dependencies";
-import { NodeStack } from "./nodeScanner";
+import {
+    getParsedPackageJson,
+    hasDependency,
+    NodeStack,
+} from "./nodeScanner";
 
 export interface NodeDeliveryOptions {
     createBuildGoal: () => Build;
     createTestGoal: () => GoalWithFulfillment;
     configureTestGoal?: (testGoal: GoalWithFulfillment) => void;
 }
+
+const HasTypescript: PushTest = pushTest("hasTypescript", async push => {
+    return getParsedPackageJson(push.project).then(pj => hasDependency(pj, "typescript")).catch(() => false);
+});
+
+const NodeModulesCacheOptions: GoalCacheOptions = {
+    entries: [
+        {classifier: "nodeModules", pattern: { directory: "node_modules" }},
+        ],
+    onCacheMiss: [NpmInstallProjectListener],
+};
+
+const CompiledTypescriptCacheOptions: GoalCacheOptions = {
+    entries: [
+        {classifier: "compiledTypescript", pattern: { globPattern: ["**/*.{js,js.map,d.ts}", "!node_modules/**/*"] }},
+    ],
+    pushTest: HasTypescript,
+    onCacheMiss: [NpmCompileProjectListener],
+};
 
 export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInterpreter, CodeInspectionRegisteringInterpreter {
 
@@ -96,9 +127,11 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
                 },
             },
         })
-        .with(NpmVersionProjectListener)
-        .with(NpmInstallProjectListener)
-        .with(NpmCompileProjectListener);
+        .withProjectListener(NpmVersionProjectListener)
+        .withProjectListener(cacheRestore(NodeModulesCacheOptions))
+        .withProjectListener(cacheRestore(CompiledTypescriptCacheOptions))
+        .withProjectListener(cacheRemove(NodeModulesCacheOptions))
+        .withProjectListener(cacheRemove(CompiledTypescriptCacheOptions));
 
     private readonly tagGoal: Tag = new Tag();
 
@@ -147,15 +180,28 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
                 .plan(this.dockerBuildGoal);
         }
 
-        if (!!nodeStack.javaScript && !!nodeStack.javaScript.eslint) {
-            const eslint = nodeStack.javaScript.eslint;
-            if (eslint.hasDependency && eslint.hasConfig) {
-                interpretation.autofixes.push(EslintAutofix);
-                interpretation.inspections.push(EslintInspection, NpmAuditInspection);
+        if (!!nodeStack.javaScript) {
+            if (!!nodeStack.javaScript.eslint) {
+                const eslint = nodeStack.javaScript.eslint;
+                if (eslint.hasDependency && eslint.hasConfig) {
+                    interpretation.autofixes.push(EslintAutofix);
+                    interpretation.inspections.push(EslintInspection, NpmAuditInspection);
+                }
+            }
+        }
+
+        if (!!nodeStack.typeScript) {
+            if (!!nodeStack.typeScript.tslint) {
+                const tslint = nodeStack.typeScript.tslint;
+                if (tslint.hasConfig) {
+                    interpretation.autofixes.push(TslintAutofix);
+                    interpretation.inspections.push(TslintInspection, NpmAuditInspection);
+                }
             }
         }
 
         interpretation.materialChangePushTests.push(isMaterialChange({
+            files: ["Dockerfile"],
             extensions: ["ts", "js", "jsx", "tsx", "json", "pug", "html", "css"],
             directories: [".atomist"],
         }));
@@ -164,11 +210,11 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
     }
 
     get autofixes(): AutofixRegistration[] {
-        return [EslintAutofix];
+        return [EslintAutofix, TslintAutofix];
     }
 
     get codeInspections(): Array<CodeInspectionRegistration<any>> {
-        return [EslintInspection, NpmAuditInspection];
+        return [EslintInspection, TslintInspection, NpmAuditInspection];
     }
 
     constructor(opts: Partial<NodeDeliveryOptions> = {}) {
@@ -196,7 +242,9 @@ function createDefaultBuildGoal(): Build {
         name: "npm-run-build",
         builder: nodeBuilder({ command: "npm", args: ["run", "build"] }),
     })
-        .withProjectListener(npmInstallProjectListener({ scope: CacheScope.Repository }));
+        .withProjectListener(NpmInstallProjectListener)
+        .withProjectListener(cachePut(CompiledTypescriptCacheOptions))
+        .withProjectListener(cachePut(NodeModulesCacheOptions));
 }
 
 function createDefaultTestGoal(): GoalWithFulfillment {
@@ -218,5 +266,6 @@ function createDefaultTestGoal(): GoalWithFulfillment {
             },
         ),
     })
-        .withProjectListener(npmInstallProjectListener({ scope: CacheScope.Repository }));
+        .withProjectListener(cacheRestore(NodeModulesCacheOptions))
+        .withProjectListener(cacheRestore(CompiledTypescriptCacheOptions));
 }
