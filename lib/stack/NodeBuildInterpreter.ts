@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import { projectUtils } from "@atomist/automation-client";
+import {
+    projectUtils,
+} from "@atomist/automation-client";
 import {
     AutofixRegistration,
     CodeInspectionRegistration,
@@ -65,13 +67,15 @@ import {
     NpmCompileProjectListener,
     NpmInstallProjectListener,
     NpmVersionProjectListener,
-    PackageJson,
     TslintAutofix,
     TslintInspection,
 } from "@atomist/sdm-pack-node";
-import * as _ from "lodash";
 import { NpmDependencyFingerprint } from "../fingerprint/dependencies";
-import { NodeStack } from "./nodeScanner";
+import {
+    getParsedPackageJson,
+    hasDependency,
+    NodeStack,
+} from "./nodeScanner";
 
 export interface NodeDeliveryOptions {
     createBuildGoal: () => Build;
@@ -79,16 +83,8 @@ export interface NodeDeliveryOptions {
     configureTestGoal?: (testGoal: GoalWithFulfillment) => void;
 }
 
-const HasTypescript: PushTest = pushTest("hasTypescript", async p => {
-    const packageJsonFile = await p.project.getFile("package.json");
-    if (!packageJsonFile) {
-        return false;
-    }
-    const packageJsonStr = await packageJsonFile.getContent();
-    const pj = JSON.parse(packageJsonStr) as PackageJson;
-    const dep = _.get(pj, `dependencies.typescript`);
-    const devDep = _.get(pj, `devDependencies.typescript`);
-    return !!(dep || devDep);
+const HasTypescript: PushTest = pushTest("hasTypescript", async push => {
+    return getParsedPackageJson(push.project).then(pj => hasDependency(pj, "typescript")).catch(() => false);
 });
 
 const NodeModulesCacheOptions: GoalCacheOptions = {

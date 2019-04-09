@@ -74,42 +74,37 @@ export interface NodeStack extends TechnologyStack {
  * Scanner to find use of Node in a project.
  */
 export const nodeScanner: TechnologyScanner<NodeStack> = async p => {
-    const packageJsonFile = await p.getFile("package.json");
-    if (!packageJsonFile) {
-        return undefined;
-    }
     try {
-        const packageJsonStr = await packageJsonFile.getContent();
-        const rawPackageJson = JSON.parse(packageJsonStr) as PackageJson;
+        const packageJson = await getParsedPackageJson(p);
 
         // Extract the information we want to summarize
-        const packageJson: PackageJsonSummary = {
-            author: rawPackageJson.author,
-            name: rawPackageJson.name,
-            description: rawPackageJson.description,
-            scripts: rawPackageJson.scripts || {},
-            version: rawPackageJson.version,
+        const packageJsonSummary: PackageJsonSummary = {
+            author: packageJson.author,
+            name: packageJson.name,
+            description: packageJson.description,
+            scripts: packageJson.scripts || {},
+            version: packageJson.version,
         };
 
         const javaScriptInto: JavaScriptInfo = {
             eslint: {
                 hasConfig: await p.hasFile(".eslintrc") || await p.hasFile(" .eslintrc.json"),
-                hasDependency: hasDependency(rawPackageJson, "eslint"),
+                hasDependency: hasDependency(packageJson, "eslint"),
             },
         };
 
         const typeScriptInfo: TypeScriptInfo = {
-            hasDependency: hasDependency(rawPackageJson, "typescript"),
-            version: getDependencyVersion(rawPackageJson, "typescript"),
+            hasDependency: hasDependency(packageJson, "typescript"),
+            version: getDependencyVersion(packageJson, "typescript"),
             tslint: {
                 hasConfig: await p.hasFile("tslint.json"),
-                hasDependency: hasDependency(rawPackageJson, "tslint"),
+                hasDependency: hasDependency(packageJson, "tslint"),
             },
         };
 
         // Add services per our dependencies
         const services: Record<string, Service> = {};
-        if (hasDependency(rawPackageJson, "mongoose", "mongodb")) {
+        if (hasDependency(packageJson, "mongoose", "mongodb")) {
             services.mongodb = {};
         }
 
@@ -119,17 +114,17 @@ export const nodeScanner: TechnologyScanner<NodeStack> = async p => {
         });
 
         const stack: NodeStack = {
-            projectName: packageJson.name,
-            packageJson,
+            projectName: packageJsonSummary.name,
+            packageJson: packageJsonSummary,
             name: "node",
             tags: ["node"],
             referencedEnvironmentVariables: await findEnvironmentVariables(p),
-            dependencies: Object.getOwnPropertyNames(rawPackageJson.dependencies || {}).map(name => {
+            dependencies: Object.getOwnPropertyNames(packageJson.dependencies || {}).map(name => {
                 return {
                     // TODO should probably parse this better
                     group: name,
                     artifact: name,
-                    version: rawPackageJson.dependencies[name],
+                    version: packageJson.dependencies[name],
                 };
             }),
             hasDockerFile: !!dockerFile,
@@ -171,10 +166,19 @@ async function findEnvironmentVariables(p: Project): Promise<string[]> {
     return matches;
 }
 
+export async function getParsedPackageJson(p: Project): Promise<PackageJson> {
+    const packageJsonFile = await p.getFile("package.json");
+    if (!packageJsonFile) {
+        return Promise.reject("No package json");
+    }
+    const packageJsonStr = await packageJsonFile.getContent();
+    return JSON.parse(packageJsonStr) as PackageJson;
+}
+
 /**
  * Check if a given package json expresses a dependency
  */
-function hasDependency(pj: PackageJson, ...dependencies: string[]): boolean {
+export function hasDependency(pj: PackageJson, ...dependencies: string[]): boolean {
     for (const dependency of dependencies) {
         if (!!_.get(pj, `dependencies.${dependency}`)
             || !!_.get(pj, `devDependencies.${dependency}`)) {
@@ -187,7 +191,7 @@ function hasDependency(pj: PackageJson, ...dependencies: string[]): boolean {
 /**
  * Check if a given package json expresses a dependency
  */
-function getDependencyVersion(pj: PackageJson, dependency: string): string {
+export function getDependencyVersion(pj: PackageJson, dependency: string): string {
     const dep = _.get(pj, `dependencies.${dependency}`);
     const devDep = _.get(pj, `devDependencies.${dependency}`);
     return dep || devDep;
