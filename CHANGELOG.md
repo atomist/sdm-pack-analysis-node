@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased](https://github.com/atomist/sdm-pack-seed/compare/1.0.0...HEAD)
 
+### Added
+
+-   Add caching and Typescript support. [#5](https://github.com/atomist/sdm-pack-analysis-node/issues/5)
+
 ### Changed
 
 -   **BREAKING** Node build now does a docker build as well if Dockerfile found. [#3](https://github.com/atomist/sdm-pack-analysis-node/issues/3)
