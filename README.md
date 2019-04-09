@@ -1,5 +1,8 @@
 # @atomist/sdm-pack-analysis-node
 
+[![atomist sdm goals](https://badge.atomist.com/T29E48P34/atomist/sdm-pack-analysis-node/3b31a0f5-028f-4c16-8832-d34a42f72b47)](https://app.atomist.com/workspace/T29E48P34)
+[![npm version](https://img.shields.io/npm/v/@atomist/sdm-pack-analysis-node.svg)](https://www.npmjs.com/package/@atomist/sdm-pack-analysis-node)
+
 This pack contains interpreters and scanners, adding Node.JS stack support to
 the `sdm-pack-analysis` extension pack.
 
