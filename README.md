@@ -1,4 +1,4 @@
-# @atomist-seeds/sdm-pack-analysis-node
+# @atomist/sdm-pack-analysis-node
 
 This pack contains interpreters and scanners, adding Node.JS stack support to
 the `sdm-pack-analysis` extension pack.
