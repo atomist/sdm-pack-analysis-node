@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+import { projectUtils } from "@atomist/automation-client";
 import {
-    projectUtils,
-} from "@atomist/automation-client";
-import {
+    AutoCodeInspection,
+    Autofix,
     AutofixRegistration,
     CodeInspectionRegistration,
     doWithProject,
@@ -89,14 +89,14 @@ const HasTypescript: PushTest = pushTest("hasTypescript", async push => {
 
 const NodeModulesCacheOptions: GoalCacheOptions = {
     entries: [
-        {classifier: "nodeModules", pattern: { directory: "node_modules" }},
-        ],
+        { classifier: "nodeModules", pattern: { directory: "node_modules" } },
+    ],
     onCacheMiss: [NpmInstallProjectListener],
 };
 
 const CompiledTypescriptCacheOptions: GoalCacheOptions = {
     entries: [
-        {classifier: "compiledTypescript", pattern: { globPattern: ["**/*.{js,js.map,d.ts}", "!node_modules/**/*"] }},
+        { classifier: "compiledTypescript", pattern: { globPattern: ["**/*.{js,js.map,d.ts}", "!node_modules/**/*"] } },
     ],
     pushTest: HasTypescript,
     onCacheMiss: [NpmCompileProjectListener],
@@ -213,8 +213,16 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
         return [EslintAutofix, TslintAutofix];
     }
 
+    public configureAutofixGoal(autofix: Autofix): void {
+        autofix.withProjectListener(cacheRestore(NodeModulesCacheOptions));
+    }
+
     get codeInspections(): Array<CodeInspectionRegistration<any>> {
         return [EslintInspection, TslintInspection, NpmAuditInspection];
+    }
+
+    public configureCodeInspectionGoal(codeInspection: AutoCodeInspection): void {
+        codeInspection.withProjectListener(cacheRestore(NodeModulesCacheOptions));
     }
 
     constructor(opts: Partial<NodeDeliveryOptions> = {}) {
