@@ -176,7 +176,7 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
         interpretation.checkGoals = checkGoals;
 
         if (nodeStack.hasDockerFile) {
-            interpretation.containerBuildGoals = goals("dockerbuild")
+            interpretation.containerBuildGoals = goals("docker build")
                 .plan(this.dockerBuildGoal);
         }
 
