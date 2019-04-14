@@ -19,7 +19,7 @@ import {
     NodeBuildInterpreter,
     NodeDeliveryOptions,
 } from "./NodeBuildInterpreter";
-import { nodeScanner } from "./nodeScanner";
+import { NodeScanner } from "./nodeScanner";
 import { PackageJsonTransformRecipeContributor } from "./PackageJsonTransformRecipeContributor";
 
 /**
@@ -27,7 +27,7 @@ import { PackageJsonTransformRecipeContributor } from "./PackageJsonTransformRec
  */
 export function nodeStackSupport(deliveryOptions: Partial<NodeDeliveryOptions> = {}): StackSupport {
     return {
-        scanners: [nodeScanner],
+        scanners: [new NodeScanner()],
         interpreters: [new NodeBuildInterpreter(deliveryOptions)],
         transformRecipeContributors: [{
             originator: "node",

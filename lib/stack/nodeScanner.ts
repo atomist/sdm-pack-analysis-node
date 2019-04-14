@@ -20,11 +20,17 @@ import {
     RegexFileParser,
 } from "@atomist/automation-client";
 import { matchIterator } from "@atomist/automation-client/lib/tree/ast/astUtils";
+import { SdmContext } from "@atomist/sdm";
 import {
     Service,
     TechnologyScanner,
     TechnologyStack,
 } from "@atomist/sdm-pack-analysis";
+import {
+    FastProject,
+    PhasedTechnologyScanner,
+    TechnologyClassification,
+} from "@atomist/sdm-pack-analysis/lib/analysis/TechnologyScanner";
 import { PackageJson } from "@atomist/sdm-pack-node";
 import * as _ from "lodash";
 
@@ -68,6 +74,38 @@ export interface NodeStack extends TechnologyStack {
 
     dockerFile: string;
 
+}
+
+export class NodeScanner implements PhasedTechnologyScanner<NodeStack> {
+
+    public async classify(p: FastProject, ctx: SdmContext): Promise<TechnologyClassification | undefined> {
+        try {
+            const packageJson = await getParsedPackageJson(p);
+            if (!!packageJson.scripts) {
+                const messages = [];
+                if (!packageJson.scripts.build) {
+                    messages.push("Project's `package.json` has no `build` script. Please add a script to enable a build goal");
+                }
+                if (!packageJson.scripts.test) {
+                    messages.push("Project's `package.json` has no `test` script. Please add a script to enable a test goal");
+                }
+                return {
+                    name: "node",
+                    tags: ["node"],
+                    messages,
+                };
+            } else {
+                return undefined;
+            }
+
+        } catch (e) {
+            return undefined;
+        }
+    }
+
+    get scan(): TechnologyScanner<NodeStack> {
+        return nodeScanner;
+    }
 }
 
 /**
