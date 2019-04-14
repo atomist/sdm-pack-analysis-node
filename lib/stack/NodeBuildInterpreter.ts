@@ -63,13 +63,13 @@ import {
     nodeBuilder,
     NodeDefaultOptions,
     NodeProjectVersioner,
-    NpmAuditInspection,
     NpmCompileProjectListener,
     NpmInstallProjectListener,
     NpmVersionProjectListener,
     TslintAutofix,
     TslintInspection,
 } from "@atomist/sdm-pack-node";
+import { npmAuditInspection } from "@atomist/sdm-pack-node/lib/inspection/npmAudit";
 import { NpmDependencyFingerprint } from "../fingerprint/dependencies";
 import {
     getParsedPackageJson,
@@ -185,7 +185,7 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
                 const eslint = nodeStack.javaScript.eslint;
                 if (eslint.hasDependency && eslint.hasConfig) {
                     interpretation.autofixes.push(EslintAutofix);
-                    interpretation.inspections.push(EslintInspection, NpmAuditInspection);
+                    interpretation.inspections.push(EslintInspection, npmAuditInspection());
                 }
             }
         }
@@ -195,7 +195,7 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
                 const tslint = nodeStack.typeScript.tslint;
                 if (tslint.hasConfig) {
                     interpretation.autofixes.push(TslintAutofix);
-                    interpretation.inspections.push(TslintInspection, NpmAuditInspection);
+                    interpretation.inspections.push(TslintInspection, npmAuditInspection());
                 }
             }
         }
@@ -218,7 +218,7 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
     }
 
     get codeInspections(): Array<CodeInspectionRegistration<any>> {
-        return [EslintInspection, TslintInspection, NpmAuditInspection];
+        return [EslintInspection, TslintInspection, npmAuditInspection()];
     }
 
     public configureCodeInspectionGoal(codeInspection: AutoCodeInspection): void {

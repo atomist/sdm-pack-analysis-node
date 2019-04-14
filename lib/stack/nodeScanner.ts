@@ -80,7 +80,7 @@ export class NodeScanner implements PhasedTechnologyScanner<NodeStack> {
 
     public async classify(p: FastProject, ctx: SdmContext): Promise<TechnologyClassification | undefined> {
         try {
-            const packageJson = await getParsedPackageJson(p);
+            const packageJson = await getParsedPackageJson(p as any);
             if (!!packageJson.scripts) {
                 const messages = [];
                 if (!packageJson.scripts.build) {
@@ -92,7 +92,9 @@ export class NodeScanner implements PhasedTechnologyScanner<NodeStack> {
                 return {
                     name: "node",
                     tags: ["node"],
-                    messages,
+                    messages: messages.map(m => ({
+                        message: m,
+                    })),
                 };
             } else {
                 return undefined;
