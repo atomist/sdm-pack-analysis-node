@@ -15,13 +15,18 @@
  */
 
 import {
+    guid,
     Project,
     projectUtils,
     RegexFileParser,
 } from "@atomist/automation-client";
 import { matchIterator } from "@atomist/automation-client/lib/tree/ast/astUtils";
-import { SdmContext } from "@atomist/sdm";
 import {
+    actionableButton,
+    SdmContext,
+} from "@atomist/sdm";
+import {
+    createDismissAction,
     Service,
     TechnologyScanner,
     TechnologyStack,
@@ -32,7 +37,14 @@ import {
     TechnologyClassification,
 } from "@atomist/sdm-pack-analysis/lib/analysis/TechnologyScanner";
 import { PackageJson } from "@atomist/sdm-pack-node";
+import {
+    Attachment,
+    bold,
+    codeLine,
+    italic,
+} from "@atomist/slack-messages";
 import * as _ from "lodash";
+import { PackageScriptCodeTransform } from "../transform/scriptTransform";
 
 export interface TypeScriptInfo {
     hasDependency: boolean;
@@ -82,12 +94,43 @@ export class NodeScanner implements PhasedTechnologyScanner<NodeStack> {
         try {
             const packageJson = await getParsedPackageJson(p as any);
             if (!!packageJson.scripts) {
-                const messages = [];
+                const messages: Array<string | Attachment> = [];
+                const slug = bold(`${p.id.owner}/${p.id.repo}`);
                 if (!packageJson.scripts.build) {
-                    messages.push("Project's `package.json` has no `build` script. Please add a script to enable a build goal");
+                    const text = `Project ${slug} has no ${codeLine("build")} script in its ${
+                        italic("package.json")}. Please add a script to enable a build goal.`;
+                    messages.push({
+                        text,
+                        fallback: "Node Project Analysis",
+                        actions: [
+                            actionableButton(
+                                { text: "Add build script" },
+                                PackageScriptCodeTransform,
+                                {
+                                    script: "build",
+                                    targets: { owner: p.id.owner, repo: p.id.repo, branch: p.id.branch },
+                                }),
+                            createDismissAction({ message: text }, { name: p.id.repo, owner: p.id.owner }, guid()),
+                        ],
+                    });
                 }
                 if (!packageJson.scripts.test) {
-                    messages.push("Project's `package.json` has no `test` script. Please add a script to enable a test goal");
+                    const text = `Project ${slug} has no ${codeLine("test")} script in its ${
+                        italic("package.json")}. Please add a script to enable a test goal.`;
+                    messages.push({
+                        text,
+                        fallback: "Node Project Analysis",
+                        actions: [
+                            actionableButton(
+                                { text: "Add test script" },
+                                PackageScriptCodeTransform,
+                                {
+                                    script: "test",
+                                    targets: { owner: p.id.owner, repo: p.id.repo, branch: p.id.branch },
+                                }),
+                            createDismissAction({ message: text }, { name: p.id.repo, owner: p.id.owner }, guid()),
+                        ],
+                    });
                 }
                 return {
                     name: "node",
