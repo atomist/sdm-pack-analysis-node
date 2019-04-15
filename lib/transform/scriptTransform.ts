@@ -34,7 +34,7 @@ export const PackageScriptCodeTransform: CodeTransformRegistration<{ script: str
     transformPresentation: (ci, p) => {
         return new PullRequest(
             `package-${ci.parameters.script}-script-${formatDate()}`,
-            "Add empty ${ci.parameters.script} to package.json",
+            `Add empty ${ci.parameters.script} to package.json`,
         );
     },
 };
