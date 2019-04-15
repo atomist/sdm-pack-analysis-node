@@ -99,38 +99,44 @@ export class NodeScanner implements PhasedTechnologyScanner<NodeStack> {
                 if (!packageJson.scripts.build) {
                     const text = `Project ${slug} has no ${codeLine("build")} script in its ${
                         italic("package.json")}. Please add a script to enable a build goal.`;
-                    messages.push({
+                    const msg: Attachment = {
                         text,
                         fallback: "Node Project Analysis",
-                        actions: [
-                            actionableButton(
-                                { text: "Add build script" },
-                                PackageScriptCodeTransform,
-                                {
-                                    script: "build",
-                                    targets: { owner: p.id.owner, repo: p.id.repo, branch: p.id.branch },
-                                }),
-                            createDismissAction({ message: text }, { name: p.id.repo, owner: p.id.owner }, guid()),
-                        ],
-                    });
+                    };
+
+                    msg.actions = [
+                        actionableButton(
+                            { text: "Add build script" },
+                            PackageScriptCodeTransform,
+                            {
+                                script: "build",
+                                targets: { owner: p.id.owner, repo: p.id.repo, branch: p.id.branch },
+                            }),
+                        createDismissAction({ message: msg }, { name: p.id.repo, owner: p.id.owner }, guid()),
+                    ];
+
+                    messages.push(msg);
                 }
                 if (!packageJson.scripts.test) {
                     const text = `Project ${slug} has no ${codeLine("test")} script in its ${
                         italic("package.json")}. Please add a script to enable a test goal.`;
-                    messages.push({
+                    const msg: Attachment = {
                         text,
                         fallback: "Node Project Analysis",
-                        actions: [
-                            actionableButton(
-                                { text: "Add test script" },
-                                PackageScriptCodeTransform,
-                                {
-                                    script: "test",
-                                    targets: { owner: p.id.owner, repo: p.id.repo, branch: p.id.branch },
-                                }),
-                            createDismissAction({ message: text }, { name: p.id.repo, owner: p.id.owner }, guid()),
-                        ],
-                    });
+                    };
+
+                    msg.actions = [
+                        actionableButton(
+                            { text: "Add test script" },
+                            PackageScriptCodeTransform,
+                            {
+                                script: "test",
+                                targets: { owner: p.id.owner, repo: p.id.repo, branch: p.id.branch },
+                            }),
+                        createDismissAction({ message: msg }, { name: p.id.repo, owner: p.id.owner }, guid()),
+                    ];
+
+                    messages.push(msg);
                 }
                 return {
                     name: "node",
