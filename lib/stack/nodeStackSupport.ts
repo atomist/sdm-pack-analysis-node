@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import { SoftwareDeliveryMachine } from "@atomist/sdm";
 import { StackSupport } from "@atomist/sdm-pack-analysis";
+import { PackageScriptCodeTransform } from "../transform/scriptTransform";
 import {
     NodeBuildInterpreter,
     NodeDeliveryOptions,
@@ -25,7 +27,11 @@ import { PackageJsonTransformRecipeContributor } from "./PackageJsonTransformRec
 /**
  * Add Node stack support.
  */
-export function nodeStackSupport(deliveryOptions: Partial<NodeDeliveryOptions> = {}): StackSupport {
+export function nodeStackSupport(sdm: SoftwareDeliveryMachine,
+                                 deliveryOptions: Partial<NodeDeliveryOptions> = {}): StackSupport {
+    // The classification will add a message to add package.json scripts in
+    sdm.addCodeTransformCommand(PackageScriptCodeTransform);
+
     return {
         scanners: [new NodeScanner()],
         interpreters: [new NodeBuildInterpreter(deliveryOptions)],

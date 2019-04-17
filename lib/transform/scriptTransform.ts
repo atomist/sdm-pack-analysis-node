@@ -14,27 +14,37 @@
  * limitations under the License.
  */
 
-import { PullRequest } from "@atomist/automation-client/lib/operations/edit/editModes";
+import { editModes } from "@atomist/automation-client";
 import {
     CodeTransformRegistration,
     formatDate,
 } from "@atomist/sdm";
 
-export const PackageScriptCodeTransform: CodeTransformRegistration<{ script: string }> = {
+/**
+ * CodeTransform to add/or overwrite a new package.json script element
+ */
+export const PackageScriptCodeTransform: CodeTransformRegistration<{ script: string, content: string }> = {
     name: "PackageScriptCodeTransform",
-    parameters: { script: {} },
+    description: "Add a script element to a project's package.json",
+    parameters: {
+        script: { displayable: false },
+        content: {
+            required: false,
+            description: "Content of package.json script element",
+        },
+    },
     transform: async (p, papi) => {
         const pjFile = await p.getFile("package.json");
         const pj = JSON.parse(await pjFile.getContent());
         // tslint:disable-next-line:no-invalid-template-strings
-        pj.scripts[papi.parameters.script] = "<please add your script here>";
+        pj.scripts[papi.parameters.script] = papi.parameters.content || "<please add your script here>";
         await pjFile.setContent(JSON.stringify(pj, undefined, 2));
         return p;
     },
     transformPresentation: (ci, p) => {
-        return new PullRequest(
+        return new editModes.PullRequest(
             `package-${ci.parameters.script}-script-${formatDate()}`,
-            `Add empty ${ci.parameters.script} to package.json`,
+            `Add ${ci.parameters.script} to package.json`,
         );
     },
 };
