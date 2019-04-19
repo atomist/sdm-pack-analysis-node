@@ -67,7 +67,7 @@ export interface JavaScriptInfo {
  * Subset of PackageJson to persist with analysis to avoid serialized data
  * structure being excessively large.
  */
-export type PackageJsonSummary = Pick<PackageJson, "name" | "description" | "author" | "version" | "scripts">;
+export type PackageJsonSummary = Pick<PackageJson, "name" | "description" | "author" | "version" | "scripts" | "dependencies">;
 
 /**
  * Represents use of Node in a project
@@ -162,7 +162,7 @@ export class NodeScanner implements PhasedTechnologyScanner<NodeStack> {
 /**
  * Scanner to find use of Node in a project.
  */
-export const nodeScanner: TechnologyScanner<NodeStack> = async p => {
+export const nodeScanner: TechnologyScanner<NodeStack> = async (p, ctx, a, opts) => {
     try {
         const packageJson = await getParsedPackageJson(p);
 
@@ -173,6 +173,7 @@ export const nodeScanner: TechnologyScanner<NodeStack> = async p => {
             description: packageJson.description,
             scripts: packageJson.scripts || {},
             version: packageJson.version,
+            dependencies: opts.full ? packageJson.dependencies : undefined,
         };
 
         const javaScriptInto: JavaScriptInfo = {
