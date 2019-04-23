@@ -30,7 +30,9 @@ import { PackageJsonTransformRecipeContributor } from "./PackageJsonTransformRec
 export function nodeStackSupport(sdm: SoftwareDeliveryMachine,
                                  deliveryOptions: Partial<NodeDeliveryOptions> = {}): StackSupport {
     // The classification will add a message to add package.json scripts in
-    sdm.addCodeTransformCommand(PackageScriptCodeTransform);
+    if (sdm) {
+        sdm.addCodeTransformCommand(PackageScriptCodeTransform);
+    }
 
     return {
         scanners: [new NodeScanner()],
