@@ -197,10 +197,7 @@ export const nodeScanner: TechnologyScanner<NodeStack> = async p => {
             services.mongodb = {};
         }
 
-        let dockerFile: string;
-        await projectUtils.doWithFiles(p, "**/Dockerfile", f => {
-            dockerFile = f.path;
-        });
+        const dockerFile = await p.hasFile("Dockerfile") ? "Dockerfile" : undefined;
 
         const stack: NodeStack = {
             projectName: packageJsonSummary.name,
