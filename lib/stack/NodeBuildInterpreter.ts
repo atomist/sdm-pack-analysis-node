@@ -117,15 +117,6 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
         .with({
             progressReporter: DockerProgressReporter,
             logInterpreter: LogSuppressor,
-            options: {
-                dockerfileFinder: async p => {
-                    let dockerfile: string = "Dockerfile";
-                    await projectUtils.doWithFiles(p, "**/Dockerfile", async f => {
-                        dockerfile = f.path;
-                    });
-                    return dockerfile;
-                },
-            },
         })
         .withProjectListener(NpmVersionProjectListener)
         .withProjectListener(cacheRestore(NodeModulesCacheOptions))
