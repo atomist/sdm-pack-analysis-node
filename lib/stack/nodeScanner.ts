@@ -17,7 +17,6 @@
 import {
     guid,
     Project,
-    projectUtils,
     RegexFileParser,
 } from "@atomist/automation-client";
 import { matchIterator } from "@atomist/automation-client/lib/tree/ast/astUtils";
@@ -67,7 +66,8 @@ export interface JavaScriptInfo {
  * Subset of PackageJson to persist with analysis to avoid serialized data
  * structure being excessively large.
  */
-export type PackageJsonSummary = Pick<PackageJson, "name" | "description" | "author" | "version" | "scripts">;
+export type PackageJsonSummary = Pick<PackageJson, "name" | "description" |
+    "author" | "license" | "version" | "scripts">;
 
 /**
  * Represents use of Node in a project
@@ -169,6 +169,7 @@ export const nodeScanner: TechnologyScanner<NodeStack> = async p => {
         // Extract the information we want to summarize
         const packageJsonSummary: PackageJsonSummary = {
             author: packageJson.author,
+            license: packageJson.license,
             name: packageJson.name,
             description: packageJson.description,
             scripts: packageJson.scripts || {},
