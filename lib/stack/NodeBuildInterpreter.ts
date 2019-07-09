@@ -53,13 +53,8 @@ import {
     DockerProgressReporter,
 } from "@atomist/sdm-pack-docker";
 import {
-    fingerprintRunner,
-    runFingerprints,
-} from "@atomist/sdm-pack-fingerprints";
-import {
     EslintAutofix,
     EslintInspection,
-    IsNode,
     nodeBuilder,
     NodeDefaultOptions,
     NodeProjectVersioner,
@@ -70,7 +65,6 @@ import {
     TslintInspection,
 } from "@atomist/sdm-pack-node";
 import { npmAuditInspection } from "@atomist/sdm-pack-node/lib/inspection/npmAudit";
-import { NpmDependencyFingerprint } from "../fingerprint/dependencies";
 import {
     getParsedPackageJson,
     hasDependency,
@@ -105,13 +99,6 @@ const CompiledTypescriptCacheOptions: GoalCacheOptions = {
 export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInterpreter, CodeInspectionRegisteringInterpreter {
 
     private readonly versionGoal: Version = new Version().withVersioner(NodeProjectVersioner);
-
-    private readonly fingerprintGoal: Fingerprint = new Fingerprint({ isolate: true })
-        .with({
-            pushTest: IsNode,
-            name: "node-fingerprint",
-            action: runFingerprints(fingerprintRunner([NpmDependencyFingerprint])),
-        });
 
     private readonly dockerBuildGoal: DockerBuild = new DockerBuild()
         .with({
@@ -163,7 +150,6 @@ export class NodeBuildInterpreter implements Interpreter, AutofixRegisteringInte
         if (!!interpretation.checkGoals) {
             checkGoals = goals("checks").plan(interpretation.checkGoals).plan(interpretation.checkGoals);
         }
-        checkGoals.plan(this.fingerprintGoal);
         interpretation.checkGoals = checkGoals;
 
         if (nodeStack.hasDockerFile) {
