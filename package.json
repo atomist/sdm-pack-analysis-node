@@ -25,7 +25,7 @@
   "main": "./index.js",
   "types": "./index.d.ts",
   "dependencies": {
-    "@atomist/slack-messages": "^1.1.0",
+    "@atomist/slack-messages": "^1.1.1",
     "lodash": "^4.17.11"
   },
   "peerDependencies": {
@@ -39,14 +39,14 @@
     "@atomist/sdm-pack-docker": ">=1.1.0"
   },
   "devDependencies": {
-    "@atomist/automation-client": "1.3.1-master.20190411084059",
-    "@atomist/sdm": "1.5.0-master.20190411091959",
-    "@atomist/sdm-core": "1.5.0-master.20190409155650",
-    "@atomist/sdm-pack-analysis": "1.1.0-master.20190415212943",
-    "@atomist/sdm-pack-build": "^1.0.3",
-    "@atomist/sdm-pack-docker": "^1.1.0",
-    "@atomist/sdm-pack-fingerprints": "^2.0.2",
-    "@atomist/sdm-pack-node": "1.0.4-master.20190405133406",
+    "@atomist/automation-client": "^1.6.1",
+    "@atomist/sdm": "^1.6.0",
+    "@atomist/sdm-core": "^1.6.0",
+    "@atomist/sdm-pack-analysis": "^1.0.0",
+    "@atomist/sdm-pack-build": "^1.0.4",
+    "@atomist/sdm-pack-docker": "^1.2.0",
+    "@atomist/sdm-pack-fingerprints": "^3.1.4",
+    "@atomist/sdm-pack-node": "^1.1.0",
     "@types/mocha": "^5.2.5",
     "@types/power-assert": "^1.5.0",
     "espower-typescript": "^9.0.0",
